@@ -6,17 +6,24 @@ import telebot
 from telebot import types
 import re
 from config import shelve_name
+from SQLighter import SQLighter
 
 bot = telebot.TeleBot(config.token)
 
 # Handle '/start' and '/help'
-@bot.message_handler(commands=['help', 'start'])
+@bot.message_handler(commands=['help', 'start', 'order'])
 def send_welcome(message):
-    markup = generate_markup('1')
-    bot.send_message(message.chat.id, 'Привет. Я - бот "Кофе и Пончики", тут ты можешь заказать кофе. Просто нажми кнопку Заказ и напиши, какой кофе и когда хочешь', reply_markup=markup)
 
+
+    markup = generate_markup('1')
+    bot.send_message(message.chat.id, 'Привет, ' + message.chat.first_name + '. Я - бот "Кофе и Пончики", тут ты можешь заказать кофе. Просто нажми кнопку Заказ и напиши, какой кофе и когда хочешь', reply_markup=markup)
 
 # Handle all other messages with content_type 'text' (content_types defaults to ['text'])
+
+@bot.message_handler(commands=['where'])
+def send_venue(message):
+    bot.send_message(message.chat.id, 'Адрес: г. Москва, ул. Перовская 61А. ')
+    bot.send_location(message.chat.id, 55.745275, 37.797442)
 
 
 def set_storage(chat, mes):
@@ -44,6 +51,7 @@ def del_storage(id):
 
 @bot.message_handler(func=lambda message: True)
 def echo_message(message):
+    print(message)
     if message.text == 'Капучино' or message.text == 'Латте' or message.text == 'Американо':
         markup = generate_markup('2')
         set_storage(message.chat.id, message.text + ', ')
@@ -54,12 +62,24 @@ def echo_message(message):
         bot.send_message(message.chat.id, 'Через сколько минут вас ждать?', reply_markup=markup)
     elif re.match(r'\d+', message.text) or message.text == 'я уже тут!':
         set_storage(message.chat.id, message.text)
-        bot.send_message(message.chat.id, 'Ваш заказ готовиться: ' + get_storage(message.chat.id))
+        db_worker = SQLighter(config.database_name)
+        if db_worker.check_exist_client(message.from_user.id) == False:
+            markup = generate_markup('4')
+            bot.send_message(message.chat.id, 'Вы ещё не заказывали у нас ничего. ' +
+                                              'Пришлите ваш номер телнефона. '
+                                              'Звонить и спамить не будем (честно) ', reply_markup=markup)
+        else:
+            bot.send_message(message.chat.id, 'Ваш заказ готовиться: ' + get_storage(message.chat.id))
+
+        db_worker.new_client(message.from_user.id, message.chat.username, message.chat.first_name)
+        db_worker.close()
         del_storage(message.chat.id)
     elif message.text == 'Отмена!':
         markup = generate_markup('1')
         del_storage(message.chat.id)
         bot.send_message(message.chat.id, 'Вы можете оформить новый заказ: ', reply_markup=markup)
+    elif message.contact is not None:
+        bot.send_message(message.chat.id, 'Спасибо за телефон')
 
         
 
@@ -70,6 +90,7 @@ def generate_markup(what):
         markup.row('Латте')
         markup.row('Американо')
         markup.row('Отмена!')
+
     elif what == '2':
         markup.row('*** Большой ***')
         markup.row('** Средний **')
@@ -78,7 +99,12 @@ def generate_markup(what):
         markup.row('5', '10', '15')
         markup.row('я уже тут!')
         markup.row('Отмена!')
+    elif what == '4':
+        markup.add(types.KeyboardButton('Отправить номер телефона', True))
+        markup.add(types.KeyboardButton('Не хочу'))
+        markup.row('Отмена!')
     return markup
-    
+
+
 
 bot.polling()
