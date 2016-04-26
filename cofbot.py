@@ -42,16 +42,29 @@ def get_storage(chat):
         except KeyError:
             return None
 
-
 def del_storage(id):
     with shelve.open(shelve_name) as storage:
         if (str(id) in storage):
             del storage[str(id)]
 
+def end_dialog(message):
+    markup = generate_markup('5')
+    with shelve.open(shelve_name) as storage:
+        if (str(message.chat.id) in storage):
+            bot.send_message(message.chat.id, get_storage(message.chat.id) + '. Мы начали готовить ваш заказ. Если вы просто хотели протестировать как работает бот, нажмите кнопку "Отмена!"', reply_markup=markup)
+        else:
+            bot.send_message(message.chat.id, 'Мы начали готовить ваш заказ. Если вы просто хотели протестировать как работает бот, нажмите кнопку "Отмена!"', reply_markup=markup)
+    del_storage(message.chat.id)
+
+@bot.message_handler(content_types=['contact'])
+def handle_contact(message):
+    db_worker = SQLighter(config.database_name)
+    db_worker.set_client_phone(message.contact, message.from_user.username)
+    db_worker.close()
+    end_dialog(message)
 
 @bot.message_handler(func=lambda message: True)
 def echo_message(message):
-    print(message)
     if message.text == 'Капучино' or message.text == 'Латте' or message.text == 'Американо':
         markup = generate_markup('2')
         set_storage(message.chat.id, message.text + ', ')
@@ -69,7 +82,7 @@ def echo_message(message):
                                               'Пришлите ваш номер телнефона. '
                                               'Звонить и спамить не будем (честно) ', reply_markup=markup)
         else:
-            bot.send_message(message.chat.id, 'Ваш заказ готовиться: ' + get_storage(message.chat.id))
+            end_dialog(message)
 
         db_worker.new_client(message.from_user.id, message.chat.username, message.chat.first_name)
         db_worker.close()
@@ -78,8 +91,12 @@ def echo_message(message):
         markup = generate_markup('1')
         del_storage(message.chat.id)
         bot.send_message(message.chat.id, 'Вы можете оформить новый заказ: ', reply_markup=markup)
-    elif message.contact is not None:
-        bot.send_message(message.chat.id, 'Спасибо за телефон')
+    elif message.text == 'Все в силе!':
+        del_storage(message.chat.id)
+        markup = types.ReplyKeyboardHide()
+        bot.send_message(message.chat.id, 'Ждем вас снова', reply_markup=markup )
+    elif message.text == 'Не хочу':
+        end_dialog(message)
 
         
 
@@ -103,6 +120,10 @@ def generate_markup(what):
         markup.add(types.KeyboardButton('Отправить номер телефона', True))
         markup.add(types.KeyboardButton('Не хочу'))
         markup.row('Отмена!')
+    elif what == '5':
+        markup.row('Все в силе!')
+        markup.row('Отмена!')
+
     return markup
 
 

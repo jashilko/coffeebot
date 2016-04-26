@@ -86,3 +86,4 @@ def generate_markup(right_answer, wrong_answers):
     for item in list_items:
         markup.add(item)
     return markup
+
