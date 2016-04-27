@@ -40,7 +40,7 @@ def del_storage(name, id):
 
 
 # Handle '/start' and '/help'
-@bot.message_handler(commands=['help', 'start', 'order'])
+@bot.message_handler(commands=['start'])
 def send_welcome(message):
     markup = generate_markup('1')
     bot.send_message(message.chat.id, 'Привет, ' + message.chat.first_name +
@@ -53,6 +53,22 @@ def send_welcome(message):
 def send_venue(message):
     bot.send_message(message.chat.id, 'Адрес: г. Москва, ул. Перовская 61А. ')
     bot.send_location(message.chat.id, 55.745275, 37.797442)
+
+# Handle '/menu'
+@bot.message_handler(commands=['menu'])
+def send_venue(message):
+    f = open('menu.txt')
+    filetostr = f.read()
+    f.close()
+    bot.send_message(message.chat.id, filetostr)
+
+# Handle '/help'
+@bot.message_handler(commands=['help'])
+def send_venue(message):
+    f = open('help.txt')
+    filetostr = f.read()
+    f.close()
+    bot.send_message(message.chat.id, filetostr)
 
 def end_dialog(message):
     markup = generate_markup('5')
