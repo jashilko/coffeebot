@@ -10,6 +10,7 @@ from config import shelve_dbid
 from config import barphone
 from SQLighter import SQLighter
 from smsc_api import *
+import time
 
 
 bot = telebot.TeleBot(config.token)
@@ -38,14 +39,33 @@ def del_storage(name, id):
         if (str(id) in storage):
             del storage[str(id)]
 
+def check_time():
+    t1 = time.localtime()
+    if (t1[3] < config.tbegin):
+        return 1
+    elif (t1[3] > config.tend):
+        return 2
+    else:
+        return 0
 
-# Handle '/start' and '/help'
+
+
+# Handle '/start'
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    markup = generate_markup('1')
-    bot.send_message(message.chat.id, 'Привет, ' + message.chat.first_name +
-                     '. Я - бот "Кофе и Пончики", тут ты можешь заказать кофе. '
-                     'Просто нажми кнопку Заказ и напиши, какой кофе и когда хочешь', reply_markup=markup)
+    if check_time() == 0:
+        markup = generate_markup('1')
+        bot.send_message(message.chat.id, 'Привет, ' + message.chat.first_name +
+                         '/ Я - бот "Кофе и Пончики", тут ты можешь заказать кофе. '
+                         'Просто нажми кнопку Заказ и напиши, какой кофе и когда хочешь', reply_markup=markup)
+    elif check_time() == 1:
+        markup = types.ReplyKeyboardHide()
+        bot.send_message(message.chat.id, 'Привет, ' + message.chat.first_name +
+                         '. Ещё рано, мы открываемся только в ' + str(config.tbegin) + ':00', reply_markup=markup)
+    elif check_time() == 2:
+        markup = types.ReplyKeyboardHide()
+        bot.send_message(message.chat.id, 'Привет, ' + message.chat.first_name +
+                         '. Уже поздно для кофе. Мы работаем до ' + str(config.tend) + ':00', reply_markup=markup)
 
 
 # Handle '/where'
@@ -96,6 +116,18 @@ def handle_contact(message):
 
 @bot.message_handler(func=lambda message: True)
 def echo_message(message):
+    if check_time() == 1:
+        markup = types.ReplyKeyboardHide()
+        bot.send_message(message.chat.id, 'Привет, ' + message.chat.first_name +
+                         '. Ещё рано, мы открываемся только в ' + str(config.tbegin) + ':00', reply_markup=markup)
+        return None
+    elif check_time() == 2:
+        markup = types.ReplyKeyboardHide()
+        bot.send_message(message.chat.id, 'Привет, ' + message.chat.first_name +
+                         '. Уже поздно для кофе. Мы работаем до ' + str(config.tend) + ':00', reply_markup=markup)
+        return None
+
+
     db_worker = SQLighter(config.database_name)
 
     # Первая стадия, выбор заказа.

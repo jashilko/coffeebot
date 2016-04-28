@@ -5,3 +5,5 @@ shelve_name = 'shelve.db'  # Файл с хранилищем
 shelve_dbid = 'shelvedbi.db'  # Файл с хранилищем
 #barphone = '79168338933' # Номер телефона баристы
 barphone = '79266601691' # Номер телефона баристы
+tbegin = 9
+tend=21
