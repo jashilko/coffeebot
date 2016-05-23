@@ -89,20 +89,29 @@ class SQLighter:
 
     def get_order_string(self, id, tobar = 0):
         with self.connection:
-            # Текст заказа для клиента
+            # Текст заказа для клиrента
             if tobar == 0:
                 res = self.cursor.execute('SELECT Item, Vol, OrderTime   FROM orders where Id = ?',
                                        (id,)).fetchall()[0]
-                if res is not None:
-                    return res[0] + ', ' + res[1] + ', ' + res[2]
+                if res[1] is None:
+                    r1 = ''
+                else:
+                    r1 = res[1]
+
+                return res[0] + ', ' + r1 + ', ' + res[2]
 
             # Текст заказа для баристы
             elif tobar == 1:
                 res = self.cursor.execute('SELECT Item, Vol, OrderTime, Clients.first_name, orders.Id FROM '
                                           'Orders LEFT JOIN Clients ON orders.IdClient = Clients.Id where Orders.Id  = ?',
                                        (id,)).fetchall()[0]
+                if res[1] is None:
+                    r1 = ''
+                else:
+                    r1 = res[1]
+
                 if res is not None:
-                    return '# ' + str(res[4]) + ' Name: ' + res[3]+ ', ' + res[0] + ', ' + res[1] + ', ' + res[2]
+                    return '# ' + str(res[4]) + ' Name: ' + res[3]+ ', ' + res[0] + ', ' + r1 + ', ' + res[2]
             else:
                 return None
 

@@ -142,6 +142,16 @@ def echo_message(message):
         # Выводим следующее сообщение
         markup = generate_markup('2')
         bot.send_message(message.chat.id, 'Ок, ' + message.text +  '. Какой размер?', reply_markup=markup)
+    elif message.text == 'Акция: Капучино + Сэндвич':
+        # Записываем ИД запись в хранилище.
+        id = db_worker.set_order(None, message.from_user.id, message.text, None, None)
+        set_storage(shelve_dbid, message.chat.id, id)
+
+        # Записываем статус 2 - выбран размер
+        set_storage(shelve_name, message.chat.id, "1")
+        markup = generate_markup('3')
+        bot.send_message(message.chat.id, 'Через сколько минут вас ждать?', reply_markup=markup)
+
     elif message.text == '*** Большой ***' or message.text == '** Средний **':
         # Апдейтим в БД объем.
         id = get_storage(shelve_dbid, message.chat.id)
@@ -197,9 +207,9 @@ def echo_message(message):
 def generate_markup(what):
     markup = types.ReplyKeyboardMarkup()
     if what == '1':
-        markup.row('Капучино')
-        markup.row('Латте')
+        markup.row(u'\U00002615' + ' Капучино', 'Латте')
         markup.row('Американо')
+        markup.row('Акция: Капучино + Сэндвич')
         markup.row('Отмена!')
 
     elif what == '2':
@@ -222,7 +232,7 @@ def generate_markup(what):
 
 def send_sms(text):
     smsc = SMSC()
-    smsc.send_sms(barphone, text, sender="sms")
+    #smsc.send_sms(barphone, text, sender="sms")
 
 
 bot.polling()
