@@ -157,13 +157,14 @@ def echo_message(message):
     if message.text == 'Отмена!':
         markup = generate_markup('1')
         # Удаляем запись в БД, записи в обоих хранилищах.
-        db_worker.del_order(int(get_storage(shelve_dbid, message.chat.id)))
+        if (get_storage(shelve_dbid, message.chat.id) is not None):
+            db_worker.del_order(int(get_storage(shelve_dbid, message.chat.id)))
         del_storage(shelve_name, message.chat.id)
         set_storage_orderstat(message.chat.id, Status_None)
         del_storage(shelve_dbid, message.chat.id)
         bot.send_message(message.chat.id, 'Вы можете оформить новый заказ: ', reply_markup=markup)
 
-    elif message.text == 'Акция: Капучино + Сэндвич':
+    elif message.text == 'Капучино + Сэндвич = 250':
         # Записываем ИД запись в хранилище.
         id = db_worker.set_order(None, message.from_user.id, message.text, None, None)
         set_storage(shelve_dbid, message.chat.id, id)
@@ -247,9 +248,9 @@ def echo_message(message):
 def generate_markup(what):
     markup = types.ReplyKeyboardMarkup()
     if what == '1':
-        markup.row(u'\U00002615' + ' Капучино', 'Латте')
+        markup.row('Капучино', 'Латте')
         markup.row('Американо')
-        markup.row('Акция: Капучино + Сэндвич')
+        markup.row('Капучино + Сэндвич = 250')
         markup.row('Отмена!')
 
     elif what == '2':
