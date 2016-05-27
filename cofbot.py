@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 
 import shelve
 import config
@@ -150,13 +150,15 @@ def echo_message(message):
 
     #Получаем статус заказа. 
     idstatus = get_storage(shelve_name, message.chat.id)
-    if idstatus is not None:
-        print ("Begin status - " + str(idstatus))
+    #if idstatus is not None:
+        #print ("Begin status - " + str(idstatus))
 
     # Проверяем, не нажал ли пользователь "Отмену!"
     if message.text == 'Отмена!':
         markup = generate_markup('1')
-        #del_storage(shelve_name, message.chat.id)
+        # Удаляем запись в БД, записи в обоих хранилищах.
+        db_worker.del_order(int(get_storage(shelve_dbid, message.chat.id)))
+        del_storage(shelve_name, message.chat.id)
         set_storage_orderstat(message.chat.id, Status_None)
         del_storage(shelve_dbid, message.chat.id)
         bot.send_message(message.chat.id, 'Вы можете оформить новый заказ: ', reply_markup=markup)
@@ -226,6 +228,7 @@ def echo_message(message):
     elif idstatus == Status_TimeChoose: 
         if (db_worker.get_order_string(get_storage(shelve_dbid, message.chat.id)) is not None):
             send_sms(db_worker.get_order_string(get_storage(shelve_dbid, message.chat.id), 1))
+        print(db_worker.get_order_string(get_storage(shelve_dbid, message.chat.id), 1))
         del_storage(shelve_name, message.chat.id)
         del_storage(shelve_dbid, message.chat.id)
         markup = types.ReplyKeyboardHide()
@@ -236,8 +239,8 @@ def echo_message(message):
     
     #Получаем статус заказа. 
     idstatus = get_storage(shelve_name, message.chat.id)
-    if idstatus is not None:
-        print ("End status - " + str(idstatus))
+    #if idstatus is not None:
+    #    print ("End status - " + str(idstatus))
 
         
 
@@ -269,7 +272,7 @@ def generate_markup(what):
 
 def send_sms(text):
     smsc = SMSC()
-    #smsc.send_sms(barphone, text, sender="sms")
+    smsc.send_sms(barphone, text, sender="sms")
 
 
 bot.polling()

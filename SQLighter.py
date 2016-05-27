@@ -115,3 +115,17 @@ class SQLighter:
             else:
                 return None
 
+
+    def del_order(self, id):
+        """
+        Удаляем заказ.
+        :param id: Id заказа.
+        """
+
+        with self.connection:
+            if (id is not None):
+               self.cursor.execute("DELETE FROM Orders where Id = ?",(id,))
+        return None
+
+
+
