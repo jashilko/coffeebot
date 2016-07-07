@@ -1,0 +1,18 @@
+#token = '203989615:AAHTsB7KnVtPRNOZmMDSXJeomp6BgN-MDKM'  # Токен тестовый
+token = '128801492:AAEK5UxyI-neaVObun_xl3txYVzJQR1SGyI' # Токер реальный
+
+Удаляем ставим хуки тестовому боту
+https://api.telegram.org/bot203989615:AAHTsB7KnVtPRNOZmMDSXJeomp6BgN-MDKM/setWebhook
+https://api.telegram.org/bot203989615:AAHTsB7KnVtPRNOZmMDSXJeomp6BgN-MDKM/setWebhook?url=https://cofbot.herokuapp.com/bot
+
+Удаляем ставим хуки РЕАЛЬНОМУ боту
+https://api.telegram.org/bot128801492:AAEK5UxyI-neaVObun_xl3txYVzJQR1SGyI/setWebhook
+https://api.telegram.org/bot128801492:AAEK5UxyI-neaVObun_xl3txYVzJQR1SGyI/setWebhook?url=https://cofbot.herokuapp.com/bot
+
+
+Заливка на heroku
+git add .
+git commit -am "Заменяем токен с тестового на реальный"
+git push heroku master
+heroku logs
+heroku logs --tail
